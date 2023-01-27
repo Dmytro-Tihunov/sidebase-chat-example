@@ -6,7 +6,7 @@ export default eventHandler(async (event: H3Event) => {
 
   const deleteMessage = await prisma.message.delete({ where: { id: Number(params.id) } })
   if (!deleteMessage) {
-    throw createError({ statusCode: 404, statusMessage: `Failed to find example with id ${params.id}` })
+    throw createError({ statusCode: 404, statusMessage: `Failed to find message with id ${params.id}` })
   }
 
   return deleteMessage

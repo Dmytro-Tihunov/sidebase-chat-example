@@ -32,6 +32,7 @@ model Message {
   message     String
   author      Users @relation(fields: [creatorId], references: [id])
   Channel     Channels @relation(fields: [channelId], references: [id])
+  idEdited    Boolean @default(false)
   creatorId   Int
   channelId   Int
 }

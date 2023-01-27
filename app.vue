@@ -159,7 +159,7 @@ onMounted(() => {
 
           <div v-if="chosenChannel" class="flex border-t px-4 py-2 w-full">
             <div class="w-full">
-              <n-input v-model:value="input" type="text" placeholder="Basic Input" @keyup.enter="addMessage" />
+              <n-input v-model:value="input" type="text" placeholder="Enter message" @keyup.enter="addMessage" />
             </div>
           </div>
         </div>
