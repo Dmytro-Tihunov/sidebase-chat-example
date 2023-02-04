@@ -6,6 +6,10 @@ interface user{
   bio: string
 }
 
+// Global State
+const activeChannel = useState('chosenChannel')
+const activeUser = useState('activeUser')
+
 const message = useMessage()
 
 const user: user = reactive({
@@ -61,6 +65,34 @@ async function addChannel (): Promise<boolean | undefined | void> {
   })
 }
 
+async function changeChannel (): Promise<boolean | undefined | void> {
+
+}
+
+async function deleteChannel (): Promise<boolean | undefined | void> {
+  await useFetch('/api/message/message', {
+    method: 'DELETE',
+    body: {
+      id: activeChannel.value.id
+    },
+    onResponse ({ response }) {
+      if (response.status === 200) {
+        message.info('All channel messages has been deleted')
+      }
+    }
+  })
+  await useFetch(`/api/channel/${activeChannel.value.id}`, {
+    method: 'DELETE',
+    onResponse ({ response }) {
+      if (response.status === 200) {
+        message.success('Channel has been deleted')
+        activeChannel.value = null
+        emit('drawerCallback', false)
+      }
+    }
+  })
+}
+
 const emit = defineEmits<{
   (e: 'drawerCallback', code: boolean): void
 }>()
@@ -94,10 +126,20 @@ defineProps<{
     </n-space>
   </n-drawer-content>
   <n-drawer-content v-if="type === 'info'" title="Channel info">
-    <n-space vertical>
-      <n-input v-model:value="channel" type="text" placeholder="Channel name" />
+    <n-space class="mb-2" vertical>
+      <n-input v-model:value="activeChannel.name" :disabled="activeUser !== activeChannel?.creatorId" type="text" placeholder="Channel name" />
+      <n-input
+        v-model:value="value"
+        type="textarea"
+        placeholder="Description"
+      />
+    </n-space>
+    <n-space>
       <n-button strong secondary @click="addChannel">
-        Create
+        Change
+      </n-button>
+      <n-button strong secondary type="error" @click="deleteChannel">
+        Delete
       </n-button>
     </n-space>
   </n-drawer-content>

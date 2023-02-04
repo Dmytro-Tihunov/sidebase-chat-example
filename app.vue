@@ -4,6 +4,7 @@ import type { DrawerPlacement } from 'naive-ui'
 import { useCookies } from '@vueuse/integrations/useCookies'
 
 const cookies = useCookies(['locale'])
+
 // Group chat app
 const { data: channels, pending: isChanellsLoading, refresh: channelsRefresh } = await useLazyFetch('/api/channel')
 
@@ -11,11 +12,14 @@ const { data: users, pending: isUsersLoading } = await useLazyFetch('/api/user/u
   method: 'GET'
 })
 
-const chosenChannel: Ref<any> = ref(null)
+// Global state
+const chosenChannel = useState<null | object>('chosenChannel', () => null)
+const activeUser = useState<null>('activeUser', () => cookies.get('user'))
 const messages = ref(null)
 
 async function getChannel (id: number): Promise<void> {
   const { data: channel } = await useFetch(`/api/channel/${id}`, {
+    method: 'GET',
     onResponse ({ response }) {
       chosenChannel.value = response._data
     }
@@ -58,6 +62,7 @@ const placement = ref<DrawerPlacement>('right')
 const chosenUser = ref()
 
 function changeUser () {
+  activeUser.value = chosenUser.value
   cookies.set('user', chosenUser.value)
 }
 
@@ -69,7 +74,6 @@ function callbackDrawer (e: boolean): void {
 onMounted(() => {
   cookies.get('user') ? chosenUser.value = cookies.get('user') : chosenUser.value = 1; cookies.set('user', 1)
 })
-
 </script>
 
 <template>
@@ -107,14 +111,16 @@ onMounted(() => {
                 </template>
               </n-button>
             </div>
-            <div class="flex justify-between p-4 border-b">
+            <div class="flex justify-between items-center p-2 px-4 border-b">
               <h5 class="font-semibold">
                 Channels
               </h5>
 
-              <button class="w-3 h-3" @click="triggerDrawer('channel')">
-                +
-              </button>
+              <n-button quaternary circle type="success" @click="triggerDrawer('channel')">
+                <template #icon>
+                  +
+                </template>
+              </n-button>
             </div>
 
             <div v-if="isChanellsLoading">

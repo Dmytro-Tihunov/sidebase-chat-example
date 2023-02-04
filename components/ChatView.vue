@@ -6,10 +6,14 @@ import { useCookies } from '@vueuse/integrations/useCookies'
 const message = useMessage()
 const cookies = useCookies()
 
+// Global State
+const activeChannel = useState('chosenChannel')
+
+const newMessage: Ref<string> = ref('')
 const isEditedEl: Ref<null | object> = ref(null)
 const isBeingEdited: Ref<boolean> = ref(false)
 
-function deleteMessage (id: number): Promise<void> {
+function deleteMessage (id: number): Promise<void | null | undefined> {
   const { data } = useFetch(`/api/message/${id}`, {
     method: 'DELETE',
     headers: useRequestHeaders(['cookie']),
@@ -26,9 +30,16 @@ function deleteMessage (id: number): Promise<void> {
 }
 
 function editMessage (el: any): void {
-  isBeingEdited.value = !isBeingEdited.value
+  newMessage.value = el.message
   isEditedEl.value = el
   console.log(el)
+}
+
+function submitEditing (id: number): void {
+  const { data } = useFetch(`/api/message/${id}`, {
+    method: 'PUT'
+  })
+  console.log(id)
 }
 
 function cancelEditing (): void {
@@ -40,9 +51,13 @@ const emit = defineEmits<{
   (e: 'deleteMessage', code: boolean): void
 }>()
 
-watch(isEditedEl, (newValue, oldValue) => {
-  console.log(newValue)
-})
+watch(
+  () => isEditedEl.value,
+  (newValue, oldValue) => {
+    console.log(newValue)
+  },
+  { deep: true }
+)
 
 defineProps<{
     messages: object | null
@@ -65,8 +80,8 @@ defineProps<{
         </div>
         <div v-if="isEditedEl?.id === el.id">
           <n-space>
-            <n-input v-model:value="el.message" type="text" placeholder="Basic Input" />
-            <n-button strong secondary type="primary">
+            <n-input v-model:value="newMessage" type="text" placeholder="Basic Input" />
+            <n-button strong secondary type="primary" @click="submitEditing(el.id)">
               Change
             </n-button>
             <n-button strong secondary type="error" @click="cancelEditing">
@@ -75,7 +90,7 @@ defineProps<{
           </n-space>
         </div>
       </div>
-      <div v-if="cookies.get('user') === el.author.id && !isBeingEdited" class="buttons">
+      <div v-if="cookies.get('user') === el.author.id && isEditedEl?.id !== el.id" class="buttons">
         <button @click="deleteMessage(el.id)">
           Delete
         </button>
